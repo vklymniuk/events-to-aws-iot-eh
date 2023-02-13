@@ -1,0 +1,10 @@
+{
+    "awsIoT": {
+      "endpointData": "",
+      "region": ""
+    },
+    "destination": {
+      "mode": "",
+      "target" : ""
+    }
+  }

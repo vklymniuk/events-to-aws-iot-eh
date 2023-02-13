@@ -1,0 +1,12 @@
+{
+    "awsIoT": {
+      "endpointIot": "https://iot.us-east-1.amazonaws.com",
+      "endpointData": "https://domain-prefix.iot.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "deviceClientHost" : "domain-prefix.iot.us-east-1.amazonaws.com"
+    },
+    "destination": {
+      "mode": "BROADCAST",
+      "target" : "DEVICES"
+    }
+  }

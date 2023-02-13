@@ -1,0 +1,117 @@
+# version: '1.0'
+# stages:
+#   - "Test"
+#   - "Deploy"
+
+# steps:
+#   main_clone: 
+#     title: Cloning main repository...
+#     stage: "Test"
+#     type: git-clone
+#     repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}' 
+#     revision: '${{CF_REVISION}}'
+
+#   BuildingTesterImage:
+#     title: Building Tester Docker Image
+#     type: build
+#     registry: ecr
+#     description: Build Dockerfile to TESTER target to perform unit and integration tests
+#     stage: "Test"
+#     working_directory: ${{main_clone}}
+#     dockerfile: Dockerfile
+#     image_name: namespacename/${{CF_REPO_NAME}}
+#     tag: '${{CF_BRANCH_TAG_NORMALIZED}}-tester'
+#     build_arguments:
+#       - NPM_TOKEN=${{NPM_TOKEN}}
+#     target: TESTER
+
+#   RunningUnitTests:
+#     title: Running Unit Tests
+#     image: ${{BuildingTesterImage}}
+#     working_directory: '/app'
+#     description: "Running unit tests inside the built TESTER image"
+#     stage: "Test"
+#     commands:
+#       - npm test
+#       - cp -R ./.nyc_output /codefresh/volume/
+
+#   RunningIntegrationTests:
+#     title: Running Integration Tests
+#     image: ${{BuildingTesterImage}}
+#     working_directory: '/app'
+#     description: "Running integration tests inside the built TESTER image"
+#     stage: "Test"
+#     commands:
+#       - npm run integration-tests
+#     environment:
+#       - AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY_ID}}
+#       - AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_ACCESS_KEY}}
+
+#   ReportToCodeCov:
+#     title: Send test reports to Codecov
+#     image: ${{IMAGE_REGISTRY}}/namespacename/codecov:11.12.0
+#     working_directory: ${{main_clone}}
+#     description: "Upload nyc reports to Codecov"
+#     stage: "Test"
+#     commands:
+#       - cp -R /codefresh/volume/.nyc_output .
+#       - npm run report-coverage
+
+#   VerifyVersionChange:
+#     title: Verify version change
+#     image: alpine/git:1.0.7
+#     working_directory: ${{main_clone}}
+#     description: "Verify package.json version node has changed"
+#     stage: "Test"
+#     commands:
+#       - git diff origin/master:package.json package.json | grep version && exit 0 || exit 1
+#     when:
+#       condition:
+#         any:
+#           PROnMaster: '''${{CF_PULL_REQUEST_TARGET}}'' == ''master'''
+
+#   PublishToNpm:
+#     title: Publishing To Npm
+#     working_directory: ${{main_clone}}
+#     image: codefresh/npm-publish:11.9.0
+#     stage: "Deploy"
+#     commands:
+#       - node /npm-publish.js
+#     when:
+#       branch:
+#         only:
+#           - master
+#           - dev
+
+#   BuildingRunnerImage:
+#     title: Building Runner Docker Image
+#     type: build
+#     registry: ecr
+#     description: Build Dockerfile to RUNNER target to perform unit and integration tests
+#     stage: "Deploy"
+#     working_directory: ${{main_clone}}
+#     dockerfile: Dockerfile
+#     image_name: 'namespacename/${{CF_REPO_NAME}}'
+#     tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+#     build_arguments:
+#       - NPM_TOKEN=${{NPM_TOKEN}}
+#     target: RUNNER
+#     when:
+#       branch:
+#         only:
+#           - master
+#           - dev
+
+#   PushToECR:
+#     type: push
+#     title: Pushing to ECR
+#     stage: "Deploy"
+#     candidate: ${{BuildingRunnerImage}}
+#     image_name: 'namespacename/${{CF_REPO_NAME}}'
+#     tag: 'latest'
+#     registry: ecr
+#     when:
+#       branch:
+#         only:
+#           - master
+#           - dev
